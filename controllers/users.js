@@ -4,7 +4,9 @@ const v = require("fastest-validator");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const mailSender = require("../helpers/email");
+const cloudinary = require("../helpers/cloudinary");
 dotenv.config({path: './config/config.env'})
+
 
 exports.signUpUser = async(req,res)=>{
     try {
@@ -29,7 +31,7 @@ exports.signUpUser = async(req,res)=>{
             await createUser.save();
 
             const verifyUser = `${req.protocol}://${req.get("host")}/api/verifyUser/${createUser._id}`;
-            const message = `Please click on this link ${verifyUser} to verify your account`;
+            const message = `Kindly clickon this link ${verifyUser} to verify your account`;
             mailSender({
                 email: createUser.email,
                 subject: "Kindly verify your account",
@@ -110,6 +112,15 @@ exports.logIn = async (req,res)=>{
                 },process.env.JWTTOKEN, {expiresIn: "1h"});
                 checkEmail.token = genToken;
                 await checkEmail.save();
+
+                const verifyMe = `${req.protocol}://${req.get("host")}/api/verifyUser/${checkEmail._id}`
+                const message = `Welcome back champ ${checkEmail.firstName} `;
+                mailSender({
+                    email: checkEmail.email,
+                    subject: "texting verification",
+                    message
+                })
+    
                 res.status(200).json({
                     data: checkEmail
                 })
@@ -189,7 +200,49 @@ exports.changePasswrd = async(req,res)=>{
         })
     } catch (error) {
         res.status(400).json({
-            message: err.message
+            message: error.message
         })
     }
-}
+};
+
+exports.updateUser = async(req,res)=>{
+    try {
+        const result  = await cloudinary.uploader.upload(req.files.image.tempFilePath)
+        const userId = req.params.userId;
+        const user = await modelName.findById(userId)
+        const {firstName,lastName, email, phoneNumber,location} = req.body;
+        const updateData = {
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            location,
+            image: result.secure_url,
+            cloudId: result.public_id
+        };
+        const updateMe = await modelName.findByIdAndUpdate(user, updateData)
+        res.status(200).json({
+            message: "Updated successfully...",
+            data: updateMe
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
+};
+
+exports.delUser = async(req,res)=>{
+    try {
+        const userId = req.body.userId;
+        // await cloudinary.uploader.destroy(user.cloudId);
+        await modelName.findByIdAndDelete(userId);
+        res.status(200).json({
+            message: "Deleted successfully..."
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: error.message
+        })
+    }
+};

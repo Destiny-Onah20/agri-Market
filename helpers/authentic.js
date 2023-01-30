@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config({path: './config/config.env'})
 
-exports.checkUser = async(req,res,next)=>{
+const checkUser = async(req,res,next)=>{
     try {
         const userId = req.params.userId;
         const user = await modelName.findById(userId);
@@ -31,7 +31,7 @@ exports.checkUser = async(req,res,next)=>{
     }
 };
 
-exports.isAdmin = (req,res,next)=>{
+exports.authAdmin = (req,res,next)=>{
     checkUser(req,res,()=>{
         if(req.user.isAdmin){
             next()
@@ -55,4 +55,4 @@ exports.isUser = (req,res,next)=>{
     })
 };
 
-module.exports = isAdmin;
+

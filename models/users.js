@@ -23,11 +23,21 @@ const userSchema = new mongoose.Schema({
         required: [true, "This Place cannot be empty"],
         unique: true
     },
+    image: {
+        type: String
+    },
+    cloudId: {
+        type: String
+    },
     location : {
         type: String,
         required: [true, "This Place cannot be empty"]
     },
     isAdmin : {
+        type: Boolean,
+        default: false
+    },
+    deleveredStatus: {
         type: Boolean,
         default: false
     },

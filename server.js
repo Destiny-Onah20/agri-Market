@@ -3,6 +3,7 @@ const app = require("./app");
 const dotenv = require("dotenv");
 dotenv.config({path: './config/config.env'})
 
+mongoose.set("strictQuery", false)
 const Db = process.env.DATABASE;
 
 mongoose.connect(Db, {
@@ -15,4 +16,4 @@ mongoose.connect(Db, {
 port = process.env.PORT
 app.listen(port, ()=>{
     console.log(`Listening to port ${port}`)
-})
+});
