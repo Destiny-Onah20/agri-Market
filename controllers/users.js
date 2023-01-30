@@ -139,4 +139,57 @@ exports.verifyUser = async(req,res)=>{
             message: err.message
         })
     }
+};
+
+exports.forgotPasswrd = async(req,res)=>{
+    try {
+        const {email} = req.body
+        const checkEmail = await modelName.findOne({email});
+        if(!checkEmail){
+            res.status(400).json({
+                message: "Sorry this email is wrong"
+            })
+        }else{
+            const genToken = jwt.sign({
+                id: checkEmail._id,
+                isAdmin: checkEmail.isAdmin
+            },process.env.JWTTOKEN, {expiresIn: "1m"});
+            const verifyEmail = `${req.protocol}://${req.get("host")}/api/changepasswrd/${checkEmail._id}/${genToken}`;
+            const message = `Click on this link ${verifyEmail} to change ur password`;
+            mailSender({
+                email: checkEmail.email,
+                subject: "Change of password",
+                message
+            });
+            res.status(200).json({
+                message: "An email has been sent to you.."
+            })
+        }
+    } catch (error) {
+        res.status(400).json({
+            message: err.message
+        })
+    }
+};
+
+exports.changePasswrd = async(req,res)=>{
+    try {
+        const {password} = req.body
+        const userId = req.params.userId;
+         const saltPwd = await bcrypt.genSalt(5);
+        const hassPwd = await bcrypt.hash(password, saltPwd);
+        const user = await modelName.findById(userId);
+        await modelName.findByIdAndUpdate(user._id, {
+            password: hassPwd
+        }, {
+            new: true
+        });
+        res.status(200).json({
+            message: "Successfully changed password.."
+        })
+    } catch (error) {
+        res.status(400).json({
+            message: err.message
+        })
+    }
 }
